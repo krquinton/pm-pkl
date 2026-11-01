@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PickleManage · Superadmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#2f332e; --navy-deep:#222622;
+    --gold:#4f9d2d; --orange:#ff6600; --blue:#3992b9; --red:#bb1421;
+    --bg:#ececec; --surface:#ffffff; --surface-2:#f7f7f5;
+    --text:#262a26; --muted:#6a706a; --border:#dcdddb;
+    --shadow: 0 6px 20px rgba(38,42,38,0.08); --radius:14px;
+  }
+  html[data-theme="dark"]{
+    --gold:#6cc144; --bg:#141714; --surface:#1e231e; --surface-2:#191d19;
+    --text:#eef1ec; --muted:#9aa49a; --border:#2f372f;
+    --shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;}
+  h1,h2,h3{font-family:'Baloo 2',system-ui,sans-serif;}
+  #gate{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;}
+  #gate .box{display:flex;flex-direction:column;align-items:center;gap:14px;font-weight:600;color:var(--muted);max-width:420px;}
+  .pm-spin{width:34px;height:34px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--gold);animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  header.top{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);color:#fff;padding:16px clamp(16px,4vw,40px);
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative;overflow:hidden;}
+  header.top::after{content:"";position:absolute;right:-40px;top:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(108,193,68,.28) 0%,transparent 70%);}
+  header.top > *{position:relative;z-index:1;}
+  header.top img{width:46px;height:46px;border-radius:10px;background:#eee;object-fit:contain;box-shadow:0 2px 8px rgba(0,0,0,.35);}
+  header.top h1{margin:0;font-size:clamp(19px,3vw,26px);font-weight:700;line-height:1.05;}
+  header.top .sub{font-size:13px;color:#c3cdc3;font-weight:500;line-height:1.15;}
+  .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+  .who{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.88);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .btn-top{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;font-family:inherit;}
+  .btn-top:hover{background:rgba(255,255,255,.22);}
+  .toggle-pill{width:56px;height:30px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;position:relative;cursor:pointer;flex-shrink:0;}
+  .toggle-pill .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#6cc144;transition:transform .2s ease;display:flex;align-items:center;justify-content:center;font-size:12px;}
+  html[data-theme="dark"] .toggle-pill .knob{transform:translateX(26px);background:#fff;}
+
+  main{max-width:1200px;margin:0 auto;padding:22px clamp(16px,4vw,40px) 60px;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);}
+  .tile .l{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+  .tile .v{font-family:'Baloo 2';font-weight:800;font-size:28px;line-height:1.1;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden;}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .card-head h3{margin:0;font-size:17px;}
+  .card-body{padding:16px 18px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 14px;align-items:end;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  .field input,.field select{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:14px;font-family:inherit;width:100%;}
+  .field input:focus,.field select:focus{outline:2px solid rgba(79,157,45,.35);border-color:var(--gold);}
+  .field .hint{font-size:11.5px;color:var(--muted);}
+  .pw-wrap{display:flex;gap:6px;}
+  .pw-wrap input{flex:1;min-width:0;}
+  .check{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;cursor:pointer;padding:10px 0;}
+  .check input{width:17px;height:17px;}
+  .btn{border:none;border-radius:9px;padding:10px 16px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{background:var(--gold);color:#fff;}
+  .btn-primary:hover:not(:disabled){box-shadow:0 4px 14px rgba(79,157,45,.4);}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+  .btn-ghost:hover:not(:disabled){border-color:var(--gold);}
+  .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:7px;}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(187,20,33,.45);}
+  .btn-danger:hover:not(:disabled){background:rgba(187,20,33,.08);}
+  .msg{margin-top:12px;font-size:13.5px;font-weight:600;min-height:18px;}
+  .msg.err{color:var(--red);} .msg.ok{color:#2e9e5b;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{text-align:left;background:var(--surface-2);color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  .tablewrap{overflow-x:auto;}
+  .empty{padding:28px;text-align:center;color:var(--muted);}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;}
+  .badge.active{background:#2e9e5b;} .badge.inactive{background:#8a97a0;} .badge.expired{background:var(--orange);}
+  .badge.role{background:var(--navy);} html[data-theme="dark"] .badge.role{background:#3b423a;}
+  .you{font-size:11px;color:var(--muted);font-weight:600;margin-left:6px;}
+  .username{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  td input[type=date]{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 7px;font-size:12.5px;font-family:inherit;}
+  .search{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;min-width:200px;}
+  .note{font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:100;opacity:0;pointer-events:none;transition:opacity .25s,bottom .25s;max-width:90vw;}
+  .toast.show{opacity:1;bottom:30px;} .toast.error{background:var(--red);}
+</style>
+</head>
+<body>
+
+<div id="gate"><div class="box"><div class="pm-spin" id="gateSpin"></div><div id="gateMsg">Checking access…</div><a class="btn btn-primary" id="gateBack" href="login.html" style="display:none;text-decoration:none;">Back to login</a></div></div>
+
+<header class="top">
+  <img src="pklbox-logo.png" alt="PKL Box">
+  <div><h1>PickleManage</h1><div class="sub">Superadmin · accounts &amp; licenses</div></div>
+  <div class="top-actions">
+    <span class="who" id="who"></span>
+    <a class="btn-top" href="index.html" title="Open the queue / DUPR admin">▶ Open admin app</a>
+    <button class="btn-top" id="btnLogout">⎋ Log out</button>
+    <div class="toggle-pill" id="themeToggle" title="Toggle light/dark mode"><div class="knob" id="themeKnob">☀️</div></div>
+  </div>
+</header>
+
+<main id="app" style="display:none;">
+  <div class="tiles">
+    <div class="tile"><div class="l">Accounts</div><div class="v" id="tTotal">0</div></div>
+    <div class="tile"><div class="l">Active</div><div class="v" id="tActive" style="color:#2e9e5b;">0</div></div>
+    <div class="tile"><div class="l">Inactive</div><div class="v" id="tInactive">0</div></div>
+    <div class="tile"><div class="l">Expired</div><div class="v" id="tExpired" style="color:var(--orange);">0</div></div>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><h3>Add account</h3></div>
+    <div class="card-body">
+      <form id="addForm" autocomplete="off" novalidate>
+        <div class="grid">
+          <div class="field"><label for="fName">Name (club / person)</label><input id="fName" type="text" maxlength="60" placeholder="e.g. PKL Box"></div>
+          <div class="field"><label for="fUser">Username</label><input id="fUser" type="text" maxlength="30" placeholder="e.g. pklbox" autocapitalize="none" spellcheck="false">
+            <span class="hint">3–30 characters: a–z, 0–9, dot, dash, underscore.</span></div>
+          <div class="field"><label for="fPass">Password / passcode</label>
+            <div class="pw-wrap"><input id="fPass" type="text" maxlength="60" placeholder="min. 6 characters" autocomplete="new-password"><button type="button" class="btn btn-ghost" id="btnGen" title="Generate a random passcode">🎲</button></div>
+            <span class="hint">Copy it before saving. It can’t be shown again.</span></div>
+          <div class="field"><label for="fRole">Role</label><select id="fRole"><option value="club">Club user</option><option value="superadmin">Superadmin</option></select></div>
+          <div class="field"><label for="fUntil">Valid until (optional)</label><input id="fUntil" type="date"></div>
+          <label class="check"><input id="fActive" type="checkbox" checked> Activate now</label>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="submit" class="btn btn-primary" id="btnAdd">＋ Create account</button>
+        </div>
+        <div class="msg" id="addMsg"></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h3>Accounts</h3><input class="search" id="search" type="search" placeholder="Search name or username…"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>License</th><th>Valid until</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card-body note">
+      <b>Inactive</b> or <b>expired</b> accounts can’t log in and see “License is not valid”. If they are signed in at that moment, they are sent back to the login page within a minute.
+      A forgotten password can’t be reset from here (Spark plan): create a new username and deactivate the old one.
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDhWLbY2QERNuOn7R-g8VljB4VTKW9RgEs",
+  authDomain: "pklbox-e01b3.firebaseapp.com",
+  projectId: "pklbox-e01b3",
+  storageBucket: "pklbox-e01b3.firebasestorage.app",
+  messagingSenderId: "197030960226",
+  appId: "1:197030960226:web:529888c44967b2c30d853b"
+};
+const SUPER_EMAIL = 'ton.quinton@gmail.com';
+const EMAIL_DOMAIN = '@picklemanage.app';
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), fs = firebase.firestore(), FV = firebase.firestore.FieldValue, TS = firebase.firestore.Timestamp;
+const COL = 'pm-users';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---- theme (same key as the admin app) ---- */
+const htmlEl = document.documentElement;
+function applyTheme(t){ htmlEl.setAttribute('data-theme', t); $('themeKnob').textContent = t === 'dark' ? '🌙' : '☀️'; localStorage.setItem('ccpc-theme', t); }
+applyTheme(localStorage.getItem('ccpc-theme') || 'light');
+$('themeToggle').addEventListener('click', () => applyTheme(htmlEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+let toastT = null;
+function toast(m, err){ const t = $('toast'); t.textContent = m; t.className = 'toast show' + (err ? ' error' : ''); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+
+/* ---- access gate: Google (ton.quinton@gmail.com) OR a passcode account with role "superadmin" ---- */
+let me = null, started = false, bouncing = false, myUnsub = null;
+function isGoogleSuper(u){ return !!u && (u.email || '').toLowerCase() === SUPER_EMAIL && u.emailVerified === true && u.providerData.some(p => p.providerId === 'google.com'); }
+function gateFail(text){ $('gate').style.display = 'flex'; $('gateSpin').style.display = 'none'; $('gateMsg').textContent = text; $('gateBack').style.display = ''; }
+function leave(url){ if (bouncing) return; bouncing = true; if (myUnsub) { try { myUnsub(); } catch (e) {} } auth.signOut().catch(() => {}).then(() => location.replace(url)); }
+function licenseOk(d){ return !!d && d.active === true && !(d.validUntil && d.validUntil.toMillis && d.validUntil.toMillis() < Date.now()); }
+function startApp(user, label){
+  if (started) return; started = true; me = user;
+  $('who').textContent = '👤 ' + label;
+  $('gate').style.display = 'none'; $('app').style.display = '';
+  listen();
+}
+$('btnLogout').addEventListener('click', () => { bouncing = true; auth.signOut().catch(() => {}).then(() => location.replace('login.html')); });
+auth.onAuthStateChanged(user => {
+  if (bouncing) return;
+  if (!user) { location.replace('login.html'); return; }
+  if (myUnsub) { try { myUnsub(); } catch (e) {} myUnsub = null; }
+  if (isGoogleSuper(user)) { startApp(user, 'Superadmin (' + user.email + ')'); return; }
+  myUnsub = fs.collection(COL).doc(user.uid).onSnapshot(snap => {
+    const d = snap.exists ? snap.data() : null;
+    if (!d && snap.metadata.fromCache) { $('gateMsg').textContent = 'Waiting for a connection…'; return; }
+    if (!licenseOk(d)) { leave('login.html?reason=license'); return; }
+    if (d.role !== 'superadmin') { bouncing = true; location.replace('index.html'); return; }   // club users belong in the admin app
+    startApp(user, (d.displayName || d.username) + ' (superadmin)');
+  }, err => { if (err && err.code === 'permission-denied') leave('login.html?reason=license'); else gateFail("Can't verify your access. Check your internet connection and refresh."); });
+});
+
+/* ---- list ---- */
+let users = [];
+function statusOf(u){
+  if (u.active !== true) return 'inactive';
+  if (u.validUntil && u.validUntil.toMillis && u.validUntil.toMillis() < Date.now()) return 'expired';
+  return 'active';
+}
+const STATUS_TXT = { active:'Active', inactive:'Inactive', expired:'Expired' };
+function fmtDate(ts){ try { return ts && ts.toDate ? ts.toDate().toLocaleDateString([], { year:'numeric', month:'short', day:'numeric' }) : '—'; } catch (e) { return '—'; } }
+function dateInputValue(ts){
+  if (!ts || !ts.toDate) return '';
+  const d = ts.toDate(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function listen(){
+  fs.collection(COL).orderBy('createdAt', 'desc').onSnapshot(snap => {
+    users = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    render();
+  }, err => toast('Could not load accounts: ' + err.message, true));
+  setInterval(render, 60000);   // keeps "Expired" up to date
+}
+function render(){
+  const q = $('search').value.trim().toLowerCase();
+  const st = users.map(statusOf);
+  $('tTotal').textContent = users.length;
+  $('tActive').textContent = st.filter(x => x === 'active').length;
+  $('tInactive').textContent = st.filter(x => x === 'inactive').length;
+  $('tExpired').textContent = st.filter(x => x === 'expired').length;
+  const list = users.filter(u => !q || (u.displayName || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q));
+  $('rows').innerHTML = list.length ? list.map(u => {
+    const s = statusOf(u), mine = me && u.id === me.uid;
+    return `<tr>
+      <td><b>${esc(u.displayName || u.username)}</b>${mine ? '<span class="you">(you)</span>' : ''}</td>
+      <td class="username">${esc(u.username)}</td>
+      <td><span class="badge role">${u.role === 'superadmin' ? 'Superadmin' : 'Club user'}</span></td>
+      <td><span class="badge ${s}">${STATUS_TXT[s]}</span></td>
+      <td><div class="row-actions"><input type="date" value="${dateInputValue(u.validUntil)}" onchange="setValidUntil('${u.id}', this.value)" title="Leave empty for no expiry">
+        ${u.validUntil ? `<button class="btn btn-ghost btn-sm" title="Remove the expiry date" onclick="setValidUntil('${u.id}','')">✕</button>` : '<span class="note">no expiry</span>'}</div></td>
+      <td>${fmtDate(u.createdAt)}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-sm ${u.active === true ? 'btn-danger' : 'btn-primary'}" ${mine ? 'disabled title="You can’t deactivate your own account"' : ''} onclick="toggleActive('${u.id}')">${u.active === true ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn btn-ghost btn-sm" title="Rename" onclick="renameUser('${u.id}')">✎</button>
+      </div></td></tr>`;
+  }).join('') : `<tr><td colspan="7" class="empty">${users.length ? 'No match.' : 'No accounts yet. Add the first one above.'}</td></tr>`;
+}
+$('search').addEventListener('input', render);
+
+async function toggleActive(id){
+  const u = users.find(x => x.id === id); if (!u) return;
+  const next = u.active !== true;
+  if (!next && !confirm(`Deactivate ${u.displayName || u.username}? They will no longer be able to log in.`)) return;
+  try { await fs.collection(COL).doc(id).update({ active: next, updatedAt: FV.serverTimestamp() }); toast(next ? 'Account activated.' : 'Account deactivated.'); }
+  catch (err) { toast('Could not update: ' + err.message, true); }
+}
+async function setValidUntil(id, val){
+  try {
+    const ts = val ? TS.fromDate(new Date(val + 'T23:59:59')) : null;   // valid through the end of that day (local time)
+    await fs.collection(COL).doc(id).update({ validUntil: ts, updatedAt: FV.serverTimestamp() });
+    toast(val ? 'Validity date saved.' : 'Expiry removed.');
+  } catch (err) { toast('Could not update: ' + err.message, true); }
+}
+async function renameUser(id){
+  const u = users.find(x => x.id === id); if (!u) return;
+  const name = (prompt('Name', u.displayName || u.username) || '').trim();
+  if (!name || name === u.displayName) return;
+  try { await fs.collection(COL).doc(id).update({ displayName: name, updatedAt: FV.serverTimestamp() }); toast('Name updated.'); }
+  catch (err) { toast('Could not update: ' + err.message, true); }
+}
+
+/* ---- add account ---- */
+const USER_RE = /^[a-z0-9._-]{3,30}$/;
+$('btnGen').addEventListener('click', () => {
+  const abc = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789', a = new Uint32Array(10);
+  crypto.getRandomValues(a);
+  $('fPass').value = Array.from(a, n => abc[n % abc.length]).join('');
+});
+function addMsg(kind, text){ const m = $('addMsg'); m.className = 'msg ' + kind; m.textContent = text; }
+
+/* A second Firebase app is used to create the login, so the superadmin stays signed in on the main one. */
+async function createLogin(username, password){
+  const app = firebase.initializeApp(firebaseConfig, 'pm-create-' + Date.now());
+  try {
+    const a = app.auth();
+    try { return (await a.createUserWithEmailAndPassword(username + EMAIL_DOMAIN, password)).user.uid; }
+    catch (err) {
+      if (err.code !== 'auth/email-already-in-use') throw err;
+      // the login exists already (for example an earlier attempt stopped half way): reuse it if the password matches
+      try { return (await a.signInWithEmailAndPassword(username + EMAIL_DOMAIN, password)).user.uid; }
+      catch (e2) { const x = new Error('That username is already taken.'); x.code = 'pm/taken'; throw x; }
+    } finally { try { await a.signOut(); } catch (e) {} }
+  } finally { try { await app.delete(); } catch (e) {} }
+}
+$('addForm').addEventListener('submit', async e => {
+  e.preventDefault(); addMsg('', '');
+  const name = $('fName').value.trim(), username = $('fUser').value.trim().toLowerCase(), password = $('fPass').value;
+  const role = $('fRole').value, until = $('fUntil').value, active = $('fActive').checked;
+  if (!name) return addMsg('err', 'Enter a name.');
+  if (!USER_RE.test(username)) return addMsg('err', 'Username must be 3–30 characters: a–z, 0–9, dot, dash or underscore.');
+  if (password.length < 6) return addMsg('err', 'Password must be at least 6 characters.');
+  if (users.some(u => (u.username || '').toLowerCase() === username)) return addMsg('err', 'That username already exists.');
+  const btn = $('btnAdd'); btn.disabled = true; addMsg('', 'Creating…');
+  try {
+    const uid = await createLogin(username, password);
+    if (users.some(u => u.id === uid)) throw Object.assign(new Error('That username is already taken.'), { code:'pm/taken' });
+    await fs.collection(COL).doc(uid).set({
+      displayName: name, username, role, active,
+      validUntil: until ? TS.fromDate(new Date(until + 'T23:59:59')) : null,
+      createdAt: FV.serverTimestamp(), createdBy: me.email || me.uid
+    });
+    addMsg('ok', `Account “${username}” created${active ? ' and activated' : ' (inactive)'}. Give them the username and password.`);
+    $('addForm').reset(); $('fActive').checked = true;
+  } catch (err) {
+    const c = err && err.code;
+    if (c === 'pm/taken') addMsg('err', 'That username is already taken. Pick another one.');
+    else if (c === 'auth/weak-password') addMsg('err', 'Password is too weak. Use at least 6 characters.');
+    else if (c === 'auth/operation-not-allowed') addMsg('err', 'Enable Email/Password sign-in in Firebase → Authentication → Sign-in method.');
+    else if (c === 'permission-denied') addMsg('err', 'Firestore rules blocked this. Publish the provided firestore.rules.');
+    else addMsg('err', 'Could not create the account: ' + (err.message || err));
+  } finally { btn.disabled = false; }
+});
+</script>
+</body>
+</html>

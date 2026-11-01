@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PickleManage — Display</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#2f332e; --navy-deep:#222622;
+    --gold:#6cc144; --orange:#ff6600; --blue:#3992b9; --red:#bb1421;
+    --bg:#141714; --surface:#1e231e; --surface-2:#191d19;
+    --text:#eef1ec; --muted:#9aa49a; --border:#2f372f;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  html[data-theme="light"]{
+    --gold:#4f9d2d; --bg:#ececec; --surface:#ffffff; --surface-2:#f7f7f5;
+    --text:#262a26; --muted:#6a706a; --border:#dcdddb;
+    --shadow: 0 8px 24px rgba(38,42,38,0.1);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  h1,h2,h3,.headline{font-family:'Baloo 2',system-ui,sans-serif;}
+
+  header.top{
+    display:flex;align-items:center;justify-content:space-between;gap:2vw;
+    padding:0 2vw;height:11vh;flex-shrink:0;
+    background:linear-gradient(135deg, var(--navy) 0%, var(--navy-deep) 100%);
+    box-shadow:var(--shadow);position:relative;z-index:5;
+  }
+  header.top .brand{display:flex;align-items:center;}
+  header.top .brand img{height:8.6vh;width:auto;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));}
+  header.top h1{margin:0;color:#fff;font-size:min(4.8vh,2.4vw);font-weight:800;text-align:center;letter-spacing:.2px;}
+  header.top .brand.right img{height:8.2vh;border-radius:1vh;}
+  header.top .titlewrap{flex:1;text-align:center;min-width:0;}
+  header.top .subline{color:var(--gold);font-weight:700;font-size:min(2.4vh,1.25vw);margin-top:.3vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .theme-toggle{position:absolute;top:8px;right:8px;width:40px;height:22px;background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.3);border-radius:14px;cursor:pointer;z-index:10;opacity:.6;}
+  .theme-toggle .knob{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--gold);
+    transition:transform .2s ease;font-size:9px;display:flex;align-items:center;justify-content:center;}
+  html[data-theme="light"] .theme-toggle .knob{transform:translateX(18px);background:var(--blue);}
+
+  main{flex:1;display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:1.2vw;padding:1.6vh 1.2vw;overflow:hidden;min-height:0;}
+  .col{display:grid;grid-template-rows:1fr 1fr;gap:1.6vh;min-height:0;min-width:0;}
+
+  .court-card{
+    background:var(--surface);border:.45vh solid var(--border);border-radius:2vh;
+    padding:1.6vh 1.5vw;box-shadow:var(--shadow);display:flex;flex-direction:column;
+    justify-content:space-between;min-height:0;min-width:0;overflow:hidden;
+  }
+  .court-card.playing{border-color:var(--orange);}
+  .court-card.assigned{border-color:var(--blue);}
+  .court-num{
+    font-family:'Baloo 2';font-weight:800;font-size:min(4vh,2.2vw);color:var(--muted);
+    text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;justify-content:space-between;line-height:1;
+  }
+  .court-status-pill{font-size:min(2.3vh,1.25vw);font-weight:800;padding:.6vh 1vw;border-radius:5vh;color:#fff;letter-spacing:0;}
+  .court-status-pill.free{background:#2e9e5b;}
+  .court-status-pill.playing{background:var(--orange);}
+  .court-status-pill.assigned{background:var(--blue);}
+  .players{display:flex;flex-direction:column;min-width:0;}
+  .players .p{font-family:'Baloo 2';font-weight:800;font-size:min(4.6vh,2.7vw);line-height:1.1;white-space:nowrap;overflow:hidden;}
+  .players .vs{color:var(--gold);font-family:'Baloo 2';font-weight:800;font-size:min(2.6vh,1.5vw);margin:.5vh 0;letter-spacing:.2em;}
+  .court-card .timer{font-family:'Baloo 2';font-weight:800;font-size:min(8.6vh,5vw);line-height:1;color:var(--gold);
+    text-align:center;font-variant-numeric:tabular-nums;}
+  .court-card .ready-note{font-family:'Baloo 2';font-weight:800;font-size:min(4vh,2.3vw);line-height:1;color:var(--blue);text-align:center;}
+  .court-card .free-label{flex:1;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;
+    font-size:min(6vh,3.4vw);color:var(--muted);}
+
+  .center-col{display:flex;flex-direction:column;min-height:0;min-width:0;}
+  .center-title{font-family:'Baloo 2';font-weight:800;font-size:min(4.4vh,2.5vw);text-align:center;line-height:1;
+    color:var(--gold);text-transform:uppercase;letter-spacing:.12em;margin-bottom:1.4vh;}
+  .next-list{flex:1;display:grid;grid-template-rows:repeat(6,1fr);gap:1.4vh;min-height:0;}
+  .next-item{background:var(--surface);border:.2vh solid var(--border);border-left:1vh solid var(--blue);
+    border-radius:1.6vh;padding:0 1.2vw;box-shadow:var(--shadow);display:flex;align-items:center;gap:1.2vw;
+    min-height:0;min-width:0;overflow:hidden;}
+  .next-item.onhold{border-left-color:var(--muted);}
+  .next-item.onhold .pos,.next-item.onhold .info{opacity:.45;}
+  .next-item .hold-tag{font-family:'Baloo 2';font-weight:800;font-size:min(3.2vh,1.8vw);color:var(--gold);flex-shrink:0;white-space:nowrap;}
+  .next-item.empty{border-style:dashed;border-left-style:dashed;box-shadow:none;background:transparent;opacity:.45;}
+  .next-item .pos{font-family:'Baloo 2';font-weight:800;font-size:min(6vh,3.4vw);color:var(--gold);width:3.2vw;text-align:center;flex-shrink:0;}
+  .next-item .info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+  .next-item .tline{font-family:'Baloo 2';font-weight:800;font-size:min(4.1vh,2.3vw);line-height:1.12;white-space:nowrap;overflow:hidden;}
+  .next-item .tline.b{color:var(--muted);}
+  .next-item .tline.b span{color:var(--gold);font-size:.7em;letter-spacing:.15em;margin-right:.5em;}
+  .next-item .empty-text{font-family:'Baloo 2';font-weight:700;font-size:min(3.6vh,2vw);color:var(--muted);}
+
+  /* Popups */
+  .tv-overlay{position:fixed;inset:0;background:rgba(10,13,10,.86);display:none;align-items:center;justify-content:center;z-index:80;}
+  .tv-overlay.show{display:flex;}
+  .tv-popup{background:var(--surface);border-radius:28px;padding:clamp(30px,4vw,60px) clamp(40px,6vw,90px);
+    text-align:center;box-shadow:0 30px 90px rgba(0,0,0,.6);border:3px solid var(--gold);max-width:90vw;}
+  .tv-popup.winner{border-color:#2e9e5b;}
+  .tv-popup .kicker{font-family:'Baloo 2';font-weight:800;font-size:min(5vh,3vw);color:var(--gold);
+    text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
+  .tv-popup.winner .kicker{color:#3ecb7c;}
+  .tv-popup .court-big{font-size:min(4.6vh,2.8vw);color:var(--muted);margin-bottom:18px;font-weight:600;}
+  .tv-popup .teams-big{font-family:'Baloo 2';font-weight:800;font-size:min(8.5vh,5.4vw);line-height:1.25;}
+  .tv-popup .score-big{font-family:'Baloo 2';font-weight:800;font-size:min(13vh,8vw);color:var(--gold);margin-top:14px;}
+  .tv-popup .winner-name{font-family:'Baloo 2';font-weight:800;font-size:min(10vh,6vw);color:#3ecb7c;margin-top:6px;}
+
+  @media (max-width: 900px){ html,body{height:auto;} body{overflow:auto;} main{grid-template-columns:1fr;} }
+  .court-bucket{font-family:'Baloo 2';font-weight:700;font-size:min(2.3vh,1.3vw);color:var(--gold);letter-spacing:0;text-transform:none;margin-left:.8vw;}
+  .next-item .side{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;flex-shrink:0;max-width:14vw;}
+  .next-item .bucket-sm{font-family:'Baloo 2';font-weight:700;font-size:min(2.4vh,1.35vw);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1;}
+  .players .team{display:flex;flex-direction:column;min-width:0;}
+  /* queue hidden: courts take the whole screen (still 2 x 2), bigger type, team names side by side */
+  body.no-queue main{grid-template-columns:1fr 1fr;}
+  body.no-queue .center-col{display:none;}
+  body.no-queue .court-num{font-size:min(5.2vh,3vw);}
+  body.no-queue .court-status-pill{font-size:min(3vh,1.7vw);}
+  body.no-queue .court-bucket{font-size:min(3vh,1.7vw);}
+  body.no-queue .players .team{flex-direction:row;gap:1.4vw;}
+  body.no-queue .players .team .p{font-size:min(7.4vh,4.4vw);min-width:0;flex:0 1 auto;}
+  body.no-queue .players .team .p + .p::before{content:'& ';color:var(--muted);}
+  body.no-queue .players .vs{font-size:min(3.6vh,2vw);margin:.8vh 0;}
+  body.no-queue .court-card .timer{font-size:min(13vh,8vw);}
+  body.no-queue .court-card .ready-note{font-size:min(5.6vh,3.2vw);}
+  body.no-queue .court-card .free-label{font-size:min(8.4vh,5vw);}
+  /* leaderboard popup (sits under the call / winner popups, z-index 80) */
+  .lb-overlay{position:fixed;inset:0;background:rgba(10,13,10,.92);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:70;padding:3vh 3vw;}
+  .lb-overlay.show{display:flex;}
+  .lb-title{font-family:'Baloo 2';font-weight:800;font-size:min(7vh,4.2vw);color:var(--gold);text-transform:uppercase;letter-spacing:.12em;line-height:1;margin-bottom:.8vh;text-align:center;}
+  .lb-sub{font-family:'Baloo 2';font-weight:700;font-size:min(3vh,1.8vw);color:var(--muted);margin-bottom:3vh;text-align:center;}
+  .lb-cols{display:grid;gap:2vw;width:100%;flex:1;min-height:0;}
+  .lb-col{background:var(--surface);border:.4vh solid var(--border);border-radius:2vh;padding:2vh 1.6vw;display:flex;flex-direction:column;min-width:0;box-shadow:var(--shadow);}
+  .lb-col h3{margin:0 0 1.6vh;font-size:min(5vh,2.8vw);color:var(--gold);text-align:center;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .lb-row{display:flex;align-items:center;gap:1vw;flex:1;min-height:0;border-top:.2vh solid var(--border);}
+  .lb-row:first-of-type{border-top:none;}
+  .lb-rank{font-family:'Baloo 2';font-weight:800;font-size:min(6vh,3.4vw);color:var(--gold);width:3.4vw;text-align:center;flex-shrink:0;}
+  .lb-name{flex:1;min-width:0;font-family:'Baloo 2';font-weight:800;font-size:min(4.8vh,2.7vw);white-space:nowrap;overflow:hidden;}
+  .lb-stat{font-family:'Baloo 2';font-weight:800;font-size:min(3.4vh,1.9vw);color:var(--muted);text-align:right;flex-shrink:0;line-height:1.1;}
+  .lb-stat b{color:var(--text);font-size:1.25em;}
+  .lb-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:'Baloo 2';font-weight:700;font-size:min(4vh,2.2vw);}
+  header.top h1{flex:1;min-width:0;}
+  header.top .brand img{height:8.2vh;border-radius:1vh;}
+  /* ===== v2: stacked layout (any court count other than 4): one column of courts, queue on the far right ===== */
+  body.stacked main{grid-template-columns:1.8fr 1fr;}
+  body.stacked.no-queue main{grid-template-columns:1fr;}
+  body.stacked .col.stack{display:grid;gap:1.2vh;min-height:0;min-width:0;}
+  body.stacked .court-card{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,3.5fr) minmax(0,1fr);align-items:center;column-gap:1.2vw;padding:.8vh 1.2vw;border-width:.4vh;border-radius:1.6vh;}
+  body.stacked .court-num{flex-direction:column;align-items:flex-start;justify-content:center;gap:.7vh;font-size:min(3.6vh,2vw);letter-spacing:.05em;white-space:nowrap;}
+  body.stacked .court-status-pill{white-space:nowrap;}
+  body.stacked .court-num > span:first-child{display:flex;flex-direction:column;gap:.3vh;}
+  body.stacked .court-bucket{margin-left:0;font-size:min(2vh,1.1vw);}
+  body.stacked .court-status-pill{font-size:min(1.9vh,1.05vw);padding:.4vh .7vw;}
+  body.stacked .court-card .timer{font-size:min(6.6vh,3.6vw);text-align:right;}
+  body.stacked .court-card .ready-note{font-size:min(2.6vh,1.5vw);line-height:1.1;text-align:right;}
+  body.stacked .court-card .free-label{grid-column:2 / 4;font-size:min(5vh,2.8vw);}
+
+  /* names: big, bold, high contrast */
+  .players .p,.players .oneline .n{color:var(--text);text-shadow:0 1px 0 rgba(0,0,0,.25);}
+  /* doubles in the stacked layout: team 1 + VS on the first line, team 2 on the second */
+  body.stacked .players.duo{justify-content:center;gap:.2vh;min-width:0;}
+  body.stacked .players.duo .tl{display:flex;align-items:baseline;justify-content:flex-start;gap:2.4vw;min-width:0;}
+  body.stacked .players.duo .tl .p{flex:0 1 auto;min-width:0;font-size:min(5.6vh,3.1vw);line-height:1.12;}
+  body.stacked .players.duo .tl .vs{flex:0 0 auto;margin:0;font-size:min(3.4vh,1.9vw);line-height:1;color:var(--gold);letter-spacing:.12em;}
+  /* singles: everything on ONE line (both layouts) */
+  .players.single{justify-content:center;min-width:0;}
+  .players .oneline{display:flex;align-items:baseline;justify-content:center;gap:.7em;white-space:nowrap;overflow:hidden;
+    font-family:'Baloo 2';font-weight:800;line-height:1.12;font-size:min(4.6vh,2.7vw);}
+  .players .oneline .n{flex:0 0 auto;}
+  .players .oneline .vs{flex:0 0 auto;margin:0;font-size:.55em;letter-spacing:.14em;color:var(--gold);}
+  body.stacked .players .oneline{font-size:min(7vh,3.8vw);justify-content:flex-start;}
+  body.no-queue:not(.stacked) .players .oneline{font-size:min(7.4vh,4.4vw);}
+
+  /* queue hidden: same single column, cards just get bigger */
+  body.stacked.no-queue .court-num{font-size:min(4.4vh,2.4vw);}
+  body.stacked.no-queue .court-status-pill{font-size:min(2.3vh,1.3vw);}
+  body.stacked.no-queue .court-bucket{font-size:min(2.4vh,1.3vw);}
+  body.stacked.no-queue .players.duo .tl .p{font-size:min(6.4vh,4.6vw);}
+  body.stacked.no-queue .players.duo .tl .vs{font-size:min(4vh,2.4vw);}
+  body.stacked.no-queue .players .oneline{font-size:min(8.2vh,5.4vw);}
+  body.stacked.no-queue .court-card .timer{font-size:min(9.6vh,5.4vw);}
+  body.stacked.no-queue .court-card .ready-note{font-size:min(3.4vh,2vw);}
+  body.stacked.no-queue .court-card .free-label{font-size:min(7vh,4vw);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><img alt="PKL Box" src="pklbox-logo.png" onerror="this.parentNode.style.display='none'"></div>
+  <div class="titlewrap">
+    <h1>PickleManage</h1>
+    <div class="subline"><span id="sessionTitle"></span><span id="sessionSep" style="display:none;"></span></div>
+  </div>
+  <div class="brand right"><img alt="DUPR" src="data:image/jpeg;base64,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"></div>
+  <div class="theme-toggle" id="themeToggle"><div class="knob" id="themeKnob">🌙</div></div>
+</header>
+
+<main id="mainGrid"></main>
+
+<div class="lb-overlay" id="lbOverlay">
+  <div class="lb-title">🏆 Leaderboard</div>
+  <div class="lb-sub" id="lbSub">Top 5 per bucket</div>
+  <div class="lb-cols" id="lbCols"></div>
+</div>
+
+<div class="tv-overlay" id="callOverlay">
+  <div class="tv-popup" id="callPopup">
+    <div class="kicker">📣 Calling players</div>
+    <div class="court-big" id="callCourt"></div>
+    <div class="teams-big" id="callTeams"></div>
+  </div>
+</div>
+
+<div class="tv-overlay" id="winnerOverlay">
+  <div class="tv-popup winner" id="winnerPopup">
+    <div class="kicker">🏆 Match result</div>
+    <div class="court-big" id="winnerCourt"></div>
+    <div class="teams-big" id="winnerTeams"></div>
+    <div class="score-big" id="winnerScore"></div>
+    <div class="winner-name" id="winnerName"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDhWLbY2QERNuOn7R-g8VljB4VTKW9RgEs",
+  authDomain: "pklbox-e01b3.firebaseapp.com",
+  projectId: "pklbox-e01b3",
+  storageBucket: "pklbox-e01b3.firebasestorage.app",
+  messagingSenderId: "197030960226",
+  appId: "1:197030960226:web:529888c44967b2c30d853b"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+let COURTS = Number(localStorage.getItem('pkl-tv-courts')) || 4;   // live from pkl-queue-session/state.courtCount (1-5)
+if (COURTS < 1 || COURTS > 5) COURTS = 4;
+
+/* Theme */
+const html = document.documentElement;
+const themeToggle = document.getElementById('themeToggle');
+const themeKnob = document.getElementById('themeKnob');
+function applyTheme(t){ html.setAttribute('data-theme', t); themeKnob.textContent = t==='light' ? '☀️' : '🌙'; localStorage.setItem('pkl-tv-theme', t); }
+applyTheme(localStorage.getItem('pkl-tv-theme') || 'dark');
+themeToggle.addEventListener('click', () => applyTheme(html.getAttribute('data-theme') === 'light' ? 'dark' : 'light'));
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+let queueMatches = [];
+let bucketsMap = {};
+/* bucket name is shown only for buckets limited to specific courts */
+function bucketTag(id){
+  const b = bucketsMap[id];
+  if (!b || !b.courts) return '';
+  const l = b.courts.filter(c => c <= COURTS);
+  return l.length && l.length < COURTS ? b.name : '';
+}
+db.collection('pkl-queue-buckets').onSnapshot(snap => {
+  bucketsMap = {};
+  snap.docs.forEach(d => { const x = d.data(); bucketsMap[d.id] = { name: x.name || '', courts: Array.isArray(x.courts) ? x.courts.map(Number) : [] }; });
+  renderCourts();
+  renderNextList();
+}, err => console.error(err));
+
+db.collection('pkl-queue-matches').onSnapshot(snap => {
+  queueMatches = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  renderCourts();
+  renderNextList();
+}, err => console.error(err));
+
+function courtBucketHtml(m){ const t = bucketTag(m.bucket); return t ? `<span class="court-bucket">${escapeHtml(t)}</span>` : ''; }
+function playersHtml(team){ return `<div class="team">${team.map(p=>`<div class="p fit">${escapeHtml(p.name)}</div>`).join('')}</div>`; }
+
+function matchBodyHtml(m){
+  const n1 = m.team1.map(p => escapeHtml(p.name)).join(' &amp; ');
+  const n2 = m.team2.map(p => escapeHtml(p.name)).join(' &amp; ');
+  if (m.team1.length === 1 && m.team2.length === 1) {
+    return `<div class="players single"><div class="oneline fit"><span class="n">${n1}</span><span class="vs">VS</span><span class="n">${n2}</span></div></div>`;
+  }
+  if (COURTS !== 4) {
+    return `<div class="players duo"><div class="tl"><div class="p fit">${n1}</div><div class="vs">VS</div></div><div class="tl"><div class="p fit">${n2}</div></div></div>`;
+  }
+  return `<div class="players">${playersHtml(m.team1)}<div class="vs">VS</div>${playersHtml(m.team2)}</div>`;
+}
+
+function renderCourts(){
+  const occupying = queueMatches.filter(m => m.status==='assigned' || m.status==='playing');
+  for (let c=1;c<=COURTS;c++){
+    const el = document.getElementById('court-'+c);
+    if (!el) continue;
+    const m = occupying.find(x => x.court === c);
+    if (!m) {
+      el.className = 'court-card';
+      el.innerHTML = `
+        <div class="court-num">Court ${c}<span class="court-status-pill free">Available</span></div>
+        <div class="free-label">Open court</div>`;
+      continue;
+    }
+    const body = matchBodyHtml(m);
+    if (m.status === 'playing'){
+      el.className = 'court-card playing';
+      el.innerHTML = `
+        <div class="court-num"><span>Court ${c}${courtBucketHtml(m)}</span><span class="court-status-pill playing">Playing</span></div>
+        ${body}
+        <div class="timer" data-started="${m.startedAt}">00:00</div>`;
+    } else {
+      el.className = 'court-card assigned';
+      el.innerHTML = `
+        <div class="court-num"><span>Court ${c}${courtBucketHtml(m)}</span><span class="court-status-pill assigned">Getting ready</span></div>
+        ${body}
+        <div class="ready-note">Please proceed to the court</div>`;
+    }
+  }
+  updateTimers();
+  fitAll();
+}
+function updateTimers(){
+  document.querySelectorAll('.timer').forEach(el => {
+    const started = Number(el.dataset.started);
+    if (!started) return;
+    const secs = Math.max(0, Math.floor((Date.now() - started) / 1000));
+    el.textContent = `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
+  });
+}
+setInterval(updateTimers, 1000);
+
+const NEXT_SLOTS = 6;
+function renderNextList(){
+  const list = queueMatches.filter(m => m.status === 'waiting' || m.status === 'onhold').sort((a,b) => a.order - b.order).slice(0, NEXT_SLOTS);
+  const el = document.getElementById('nextList');
+  let html = '';
+  for (let i=0;i<NEXT_SLOTS;i++){
+    const m = list[i];
+    if (!m) {
+      html += `<div class="next-item empty"><div class="pos">${i+1}</div><div class="info"><div class="empty-text">—</div></div></div>`;
+      continue;
+    }
+    html += `
+    <div class="next-item${m.status === 'onhold' ? ' onhold' : ''}">
+      <div class="pos">${i+1}</div>
+      <div class="info">
+        <div class="tline fit">${escapeHtml(m.team1.map(p=>p.name).join(' & '))}</div>
+        <div class="tline b fit"><span>VS</span>${escapeHtml(m.team2.map(p=>p.name).join(' & '))}</div>
+      </div>
+      ${(bucketTag(m.bucket) || m.status === 'onhold') ? `<div class="side">${bucketTag(m.bucket) ? `<div class="bucket-sm">${escapeHtml(bucketTag(m.bucket))}</div>` : ''}${m.status === 'onhold' ? '<div class="hold-tag">(On Hold)</div>' : ''}</div>` : ''}
+    </div>`;
+  }
+  el.innerHTML = html;
+  fitAll();
+}
+
+/* shrink text only when a name would overflow its line, so long names stay fully visible */
+function fitAll(){
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.fit').forEach(el => {
+      el.style.fontSize = '';
+      let size = parseFloat(getComputedStyle(el).fontSize);
+      let guard = 0;
+      while (el.scrollWidth > el.clientWidth + 1 && size > 14 && guard < 120) {
+        size -= 1; el.style.fontSize = size + 'px'; guard++;
+      }
+    });
+    /* both team lines of a stacked doubles card share the smaller size so they look even */
+    document.querySelectorAll('.players.duo').forEach(card => {
+      const ps = [...card.querySelectorAll('.p.fit')];
+      if (ps.length < 2) return;
+      const min = Math.min(...ps.map(p => parseFloat(getComputedStyle(p).fontSize)));
+      ps.forEach(p => { p.style.fontSize = min + 'px'; });
+    });
+  });
+}
+window.addEventListener('resize', fitAll);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+
+/* Session name (center of the header) */
+db.collection('pkl-queue-session').doc('state').onSnapshot(doc => {
+  const d = doc.exists ? doc.data() : {};
+  const cc = Number(d.courtCount);
+  const n = (cc >= 1 && cc <= 5) ? Math.floor(cc) : 4;
+  if (n !== COURTS) { COURTS = n; localStorage.setItem('pkl-tv-courts', String(n)); buildLayout(); }
+  const name = d.currentSessionName || '';
+  document.getElementById('sessionTitle').textContent = name;
+  document.getElementById('sessionSep').style.display = name ? '' : 'none';
+  document.title = name ? name + ' — PickleManage' : 'PickleManage';
+}, err => console.error(err));
+
+/* Display settings from the admin: show/hide the queue, leaderboard popup */
+let displaySettings = {};
+db.collection('pkl-queue-events').doc('displaySettings').onSnapshot(doc => {
+  displaySettings = doc.exists ? doc.data() : {};
+  applyDisplaySettings();
+}, err => console.error(err));
+function applyDisplaySettings(){
+  const showQueue = displaySettings.showQueue !== false;
+  document.body.classList.toggle('no-queue', !showQueue);
+  renderLeaderboardPopup();
+  fitAll();
+  setTimeout(fitAll, 150);
+}
+function renderLeaderboardPopup(){
+  const ov = document.getElementById('lbOverlay');
+  const lb = displaySettings.leaderboard;
+  if (!lb || !lb.show) { ov.classList.remove('show'); return; }
+  const buckets = (lb.buckets || []).slice(0, 3);
+  document.getElementById('lbSub').textContent = (lb.sessionName ? lb.sessionName + ' · ' : '') + 'Top 5 per bucket';
+  const cols = document.getElementById('lbCols');
+  cols.style.gridTemplateColumns = `repeat(${Math.max(1, buckets.length)}, 1fr)`;
+  cols.innerHTML = buckets.map(b => `
+    <div class="lb-col">
+      <h3>${escapeHtml(b.name)}</h3>
+      ${(b.rows && b.rows.length) ? b.rows.map(r => `
+        <div class="lb-row">
+          <div class="lb-rank">${r.rank}</div>
+          <div class="lb-name fit">${escapeHtml(r.name)}</div>
+          <div class="lb-stat"><b>${r.w}</b> W<br>${r.pf} pts</div>
+        </div>`).join('') : `<div class="lb-empty">No results yet</div>`}
+    </div>`).join('');
+  ov.classList.add('show');
+  fitAll();
+}
+
+/* TV events: call players / winner popups */
+let eventsInitialized = false;
+let lastEventId = null;
+db.collection('pkl-queue-events').orderBy('createdAt','desc').limit(1).onSnapshot(snap => {
+  if (snap.empty) { eventsInitialized = true; return; }
+  const doc = snap.docs[0];
+  const data = doc.data();
+  if (!data.createdAt) return; // still-pending serverTimestamp write; wait for the confirmed snapshot
+  if (!eventsInitialized) { eventsInitialized = true; lastEventId = doc.id; return; }
+  if (doc.id === lastEventId) return;
+  lastEventId = doc.id;
+  const ageMs = Date.now() - data.createdAt.toMillis();
+  if (ageMs > 15000) return;
+  if (data.type === 'call') showCallPopup(data);
+  else if (data.type === 'winner') showWinnerPopup(data);
+}, err => console.error(err));
+
+function showCallPopup(data){
+  const t1 = data.team1.join(' & ');
+  const t2 = data.team2.join(' & ');
+  document.getElementById('callCourt').textContent = `Court ${data.court}`;
+  document.getElementById('callTeams').innerHTML = `${escapeHtml(t1)}<br><span style="color:var(--muted);font-size:.6em;">vs</span><br>${escapeHtml(t2)}`;
+  const ov = document.getElementById('callOverlay');
+  ov.classList.add('show');
+  setTimeout(() => ov.classList.remove('show'), 5000);
+}
+function showWinnerPopup(data){
+  const t1 = data.team1.join(' & ');
+  const t2 = data.team2.join(' & ');
+  const winnerNames = data.winner === 'team1' ? t1 : t2;
+  document.getElementById('winnerCourt').textContent = `Court ${data.court}`;
+  document.getElementById('winnerTeams').innerHTML = `${escapeHtml(t1)} <span style="color:var(--muted);font-size:.5em;">vs</span> ${escapeHtml(t2)}`;
+  document.getElementById('winnerScore').textContent = `${data.score1} – ${data.score2}`;
+  document.getElementById('winnerName').textContent = winnerNames;
+  const ov = document.getElementById('winnerOverlay');
+  ov.classList.add('show');
+  setTimeout(() => ov.classList.remove('show'), 5000);
+}
+
+/* Layout: exactly 4 courts keeps the 2 x 2 grid with the queue in the middle.
+   Any other count stacks the courts in ONE column and moves the queue to the far right. */
+function buildLayout(){
+  const main = document.getElementById('mainGrid');
+  const n = COURTS;
+  const card = c => `<div class="court-card" id="court-${c}"></div>`;
+  const queue = `<div class="col center-col"><div class="center-title">Up Next</div><div class="next-list" id="nextList"></div></div>`;
+  document.body.classList.toggle('stacked', n !== 4);
+  document.body.setAttribute('data-courts', String(n));
+  if (n === 4) {
+    main.innerHTML = `<div class="col courts">${card(1)}${card(2)}</div>${queue}<div class="col courts">${card(3)}${card(4)}</div>`;
+  } else {
+    main.innerHTML = `<div class="col courts stack" style="grid-template-rows:repeat(${n},minmax(0,1fr))">${Array.from({length:n},(_,i)=>card(i+1)).join('')}</div>${queue}`;
+  }
+  renderCourts();
+  renderNextList();
+}
+buildLayout();
+</script>
+</body>
+</html>
